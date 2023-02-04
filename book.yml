@@ -1,0 +1,69 @@
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: book
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: book
+  template:
+    metadata:
+      name: book
+      labels:
+        name: book
+    spec:
+      containers:
+        - name: book
+          image: daimus/book-service:latest
+          ports:
+            - containerPort: 8081
+          env:
+            - name: SPRING_DATASOURCE_URL
+              value: "jdbc:postgresql://postgres-service.default.svc.cluster.local:5432/book_db"
+            - name: SPRING_DATASOURCE_USERNAME
+              value: "book_user"
+            - name: SPRING_DATASOURCE_PASSWORD
+              value: "password"
+            - name: SPRING_DATA_REDIS_HOST
+              value: "redis-service.default.svc.cluster.local"
+            - name: SPRING_DATA_REDIS_PORT
+              value: "6379"
+            - name: SERVER_PORT
+              value: "8081"
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: book-service
+spec:
+  selector:
+    name: book
+  ports:
+    - port: 80
+      targetPort: 8081
+
+---
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: book-ingress
+  labels:
+    name: book-ingress
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: "book.daimus.local"
+    http:
+      paths:
+      - path: "/"
+        pathType: "Prefix"
+        backend:
+          service:
+            name: book-service
+            port:
+              number: 80
+

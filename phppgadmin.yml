@@ -1,0 +1,32 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: phppgadmin
+  labels:
+    name: phppgadmin
+spec:
+  containers:
+    - name: phppgadmin
+      image: bitnami/phppgadmin
+      ports:
+        - containerPort: 8080
+      env:
+        - name: DATABASE_HOST
+          value: "postgres-service.default.svc.cluster.local"
+        - name: DATABASE_PORT_NUMBER
+          value: "5432"
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: phppgadmin-service
+spec:
+  type: NodePort
+  selector:
+    name: phppgadmin
+  ports:
+    - port: 8080
+      targetPort: 8080
+      nodePort: 30002
